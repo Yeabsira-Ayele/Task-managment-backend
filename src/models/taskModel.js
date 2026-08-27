@@ -2,7 +2,7 @@ const mongoose = require('mongoose'); // Fixed spelling
 
 
 const taskSchema = new mongoose.Schema({
-    titleName: { type: String, required: true },
+    taskTitle: { type: String, required: true },
     description: { type: String, required: true },
     status: { type: String, required: true },
     priority: { type: String, required: true }, 

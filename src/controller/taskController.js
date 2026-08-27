@@ -2,23 +2,32 @@ const Task = require('../models/taskModel')
 
 exports.createTask = async(req, res) =>{
     try{
-        const newTask = await Task.create(req.body);
+    const payload = {
+      ...req.body,
+      tags: typeof req.body.tags === "string"
+        ? req.body.tags.split(",").map(t => t.trim()).filter(Boolean)
+        : req.body.tags,
+    };
+    const newTask = await Task.create(payload);
+    
         
         res.status(201).json({success: true , data : newTask} )
+        console.log(res);
     }catch(error){
+        console.error(error);
         res.status(400).json({success: false , error: error.message})
     }
 }
        
-exports.getAllTasks = async(req , res) =>{
-    try{
-        const allTasks = await Task.find();
-        res.status(200).json({success: true , data : allTasks} )
+// exports.getAllTasks = async(req , res) =>{
+//     try{
+//         const allTasks = await Task.find();
+//         res.status(200).json({success: true , data : allTasks} )
 
-    }catch(error){
-        res.status(500).json({success: false , error: error.message})
-    }
-}       
+//     }catch(error){
+//         res.status(500).json({success: false , error: error.message})
+//     }
+// }       
 
 exports.getSingletask = async(req , res) =>{
     try{
@@ -27,22 +36,38 @@ exports.getSingletask = async(req , res) =>{
         res.status(200).json({success: true , data : task} )
 
     }catch(error){
+        console.error(error);
          res.status(500).json({success: false , error: error.message})
     }
 }
        
-exports.updateTask = async (req , res) =>{
-    try{
-       const updatedtask = await Task.findByIdAndUpdate(
-        req.params.id , req.body , {new : true}
-       )
-        if(!updatedtask) return res.status(404).json({success: false , data: " Could not find Task"})
-       
-        res.status(200).json({success: true , data: updatedtask})
-    }catch(error){
-        res.status(500).json({success: true , error : error.message} )
+exports.updateTask = async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) return res.status(404).json({ success: false, error: "Could not find Task" });
+
+        const isAdmin = req.user.role === "admin";
+        const isOwner = task.assignee.toString() === req.user.id;
+
+        if (isAdmin) {
+            // Admin can edit anything, including reassigning
+            const updated = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            return res.status(200).json({ success: true, data: updated });
+        }
+
+        if (isOwner) {
+            // Member can ONLY change status on their own task — nothing else
+            const allowedUpdate = { status: req.body.status };
+            const updated = await Task.findByIdAndUpdate(req.params.id, allowedUpdate, { new: true });
+            return res.status(200).json({ success: true, data: updated });
+        }
+
+        // Not admin, not owner — no access to modify at all
+        return res.status(403).json({ success: false, error: "You can only update your own tasks" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
-}
+};
     
 exports.deleteTask = async(req , res) =>{
     try{
@@ -50,7 +75,7 @@ exports.deleteTask = async(req , res) =>{
             req.params.id 
         )
 
-        if(!deleteTask) return res.status(404).json({success: false ,data: "Could not find Task"})
+        if(!deleteTask) return res.status(404).json({success: false ,error: "Could not find Task"})
         
             res.status(200).json({success: true , data: "task deleted successfully"})
     }catch(error){
