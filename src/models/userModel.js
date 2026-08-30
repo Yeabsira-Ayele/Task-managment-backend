@@ -1,11 +1,14 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    fname: { type: String, required: true },   // FIX: "string" -> "String"
-    lname: { type: String, required: true },   // FIX: "string" -> "String"
-    email: { type: String, required: true, unique: true }, // FIX: "string" -> "String"
-    password: { type: String, required: true }, // FIX: "string" -> "String"
-    role: { type: String, enum: ["admin", "member"], default: "member" }, // FIX: "string" -> "String"
+    fname: { type: String, required: true },
+    lname: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    
+    status: {type: String, enum: ["pending", "active", "suspended"], default: "pending"},
+    resetPasswordToken: { type: String, default: undefined },
+    resetPasswordExpires: { type: Date, default: undefined },
 }, { timestamps: true });
 
-module.exports = mongoose.model("User", userSchema); 
+module.exports = mongoose.model("User", userSchema);

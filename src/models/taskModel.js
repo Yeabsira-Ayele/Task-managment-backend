@@ -6,7 +6,8 @@ const taskSchema = new mongoose.Schema({
     description: { type: String, required: true },
     status: { type: String, required: true },
     priority: { type: String, required: true }, 
-    assignee: { type: String, required: true },
+    assignee: {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true,
+},
     dueDate: { type: Date, required: true },   
     tags: { type: [String], required: true },   
     filePath: { type: String }                 

@@ -102,7 +102,34 @@ exports.filterByQuery = async (req, res) => {
     }
 };
 
-        
+ exports.filterByQuery = async (req, res) => {
+    try {
+        const { status, priority, searchData } = req.query || req.body || {};
+        const query = {
+            ...(status && { status }),
+            ...(priority && { priority }),
+            ...(searchData && { taskTitle: { $regex: searchData, $options: 'i' } })
+        };
+
+        // FIX: populate assignee so the frontend gets { _id, fname, lname } instead of
+        // just a raw ObjectId string it can't display as a name.
+        const filteredTasks = await Task.find(query).populate("assignee", "fname lname email");
+
+        res.status(200).json({ success: true, data: filteredTasks });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+exports.getSingletask = async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id).populate("assignee", "fname lname email"); // FIX
+        if (!task) return res.status(404).json({ success: false, error: "Could not find Task" });
+        res.status(200).json({ success: true, data: task });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};       
 
 
 

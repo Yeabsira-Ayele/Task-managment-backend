@@ -3,7 +3,7 @@ const router = express.Router();
 const taskController = require('../controller/taskController')
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
-router.post("/task" , requireAuth , requireAdmin ,taskController.createTask) ;
+router.post("/task" , requireAuth , taskController.createTask) ;
 
 router.get("/task/:id" ,requireAuth, taskController.getSingletask) ;
 
