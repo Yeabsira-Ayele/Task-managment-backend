@@ -5,8 +5,8 @@ const userSchema = new mongoose.Schema({
     lname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    
-    status: {type: String, enum: ["pending", "active", "suspended"], default: "pending"},
+    role: { type: String, enum: ["admin", "member"], default: "member" },
+    status: { type: String, enum: ["pending", "active", "suspended"], default: "pending" },
     resetPasswordToken: { type: String, default: undefined },
     resetPasswordExpires: { type: Date, default: undefined },
 }, { timestamps: true });

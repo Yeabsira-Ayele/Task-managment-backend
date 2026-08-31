@@ -3,13 +3,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dotenv = require("dotenv");
 const crypto = require('crypto');
-const sendEmail = require("../utils/sendEmail");
 
 dotenv.config();
 
 
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
 // Make sure your .env key is named JWT_SECRET to match this (rename TOKEN_SECRET -> JWT_SECRET,
 // or change this line to process.env.TOKEN_SECRET — just keep it consistent everywhere)
 
@@ -27,16 +27,12 @@ const isPasswordStrong = (password) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const { email, password, fname, lname } = req.body;
+        const { email, password, fname, lname, role } = req.body;
 
         if (!email || !password || !fname || !lname) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        // FIX: previously only the frontend Zod schema checked password strength.
-        // Anyone bypassing the UI (Postman, curl, a malicious script) could
-        // register with a 1-character password. Now enforced server-side too,
-        // which is the only enforcement that actually can't be bypassed.
         if (!isPasswordStrong(password)) {
             return res.status(400).json({
                 success: false,
@@ -50,16 +46,20 @@ exports.createUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
-        const role = email === process.env.ADMIN_EMAIL ? "admin" : "member";
+        const assignedRole = role === "admin" ? "admin" : "member";
 
         const newUser = await User.create({
-            email, password: hashedPassword, fname, lname, role, status: "active",
+            email,
+            password: hashedPassword,
+            fname,
+            lname,
+            role: assignedRole,
         });
 
-        const token = signToken(newUser);
         res.status(201).json({
-            success: true, token,
-            user: { id: newUser._id, fname, lname, email, role },
+            success: true,
+            message: "User created successfully",
+            data: { id: newUser._id, fname: newUser.fname, lname: newUser.lname, email: newUser.email, role: newUser.role },
         });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
