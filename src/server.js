@@ -15,7 +15,7 @@ const PORT = Number(process.env.PORT) || 5000 ;
 
 const app = express()
 app.use(express.json());
-app.use(cors());
+app.use(cors({FRONTEND_URL}));
 
 // 2. REGISTER THE ROUTER HERE (Before app.listen and before any general route mappings)
 app.use('/api', taskRouter);
