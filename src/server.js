@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const helmet = require("helmet");
 const bcrypt = require('bcryptjs');
 const dns = require('node:dns');
-dns.setServers(['1.1.1.1', '8.8.8.8']); // Forces Cloudflare and Google DNS
+dns.setServers(['1.1.1.1', '8.8.8.8']); 
 
 dotenv.config();
 
@@ -19,8 +19,20 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(express.json());
+
+const allowedOrigins = [
+    process.env.FRONTEND_URL, 
+    "http://localhost:5173",  
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
 }));
 
@@ -65,9 +77,9 @@ async function ensureDefaultAdmin() {
             status: "active",
         });
 
-        console.log("✅ Default admin created:", admin.email);
+        console.log("Default admin created:", admin.email);
     } catch (err) {
-        console.error("❌ Failed to create default admin:", err.message);
+        console.error(" Failed to create default admin:", err.message);
     }
 }
 
