@@ -1,10 +1,9 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const dotenv = require("dotenv");
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
-dotenv.config();
+
 
 
 const signToken = (user) =>
@@ -69,20 +68,22 @@ exports.createUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log("LOGIN ATTEMPT:", JSON.stringify({ email, password })); // TEMP
 
         if (!email || !password) {
             return res.status(400).json({ success: false, message: 'Please provide email and password' });
         }
 
         const user = await User.findOne({ email });
+        console.log("USER FOUND:", user ? user.email : null); // TEMP
+
         if (!user) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
-        }
+        console.log("PASSWORD MATCH:", isMatch); // TEMP
+        
 
         // FIX: use the same signToken() helper as createUser — sends only
         // { id, role }, never the password hash, and expires after 7 days
